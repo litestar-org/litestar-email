@@ -336,3 +336,105 @@ async def test_smtp_backend_starttls_upgrade() -> None:
         await backend.open()
 
         mock_smtp.starttls.assert_called_once()
+
+
+async def test_smtp_backend_starttls_no_double_call() -> None:
+    """Test that start_tls=False is passed to aiosmtplib to prevent double STARTTLS.
+
+    Regression test for: SMTP STARTTLS executed twice causes
+    'Connection already using TLS' error when aiosmtplib auto-detects
+    STARTTLS support and litestar-email also calls starttls() manually.
+    """
+    from litestar_email.backends.smtp import SMTPBackend
+    from litestar_email.config import SMTPConfig
+
+    config = SMTPConfig(
+        host="smtp.example.com",
+        port=587,
+        use_tls=True,
+        use_ssl=False,
+    )
+    backend = SMTPBackend(config=config)
+
+    with patch("aiosmtplib.SMTP") as mock_smtp_class:
+        mock_smtp = AsyncMock()
+        mock_smtp.connect = AsyncMock()
+        mock_smtp.starttls = AsyncMock()
+        mock_smtp_class.return_value = mock_smtp
+
+        await backend.open()
+
+        # Verify start_tls=False was passed to disable auto-STARTTLS
+        mock_smtp_class.assert_called_once_with(
+            hostname="smtp.example.com",
+            port=587,
+            timeout=30,
+            use_tls=False,
+            start_tls=False,
+        )
+        # Verify manual STARTTLS is still called exactly once
+        mock_smtp.starttls.assert_called_once()
+
+
+async def test_smtp_backend_ssl_does_not_call_starttls() -> None:
+    """Test that implicit SSL (use_ssl=True) does not trigger manual STARTTLS."""
+    from litestar_email.backends.smtp import SMTPBackend
+    from litestar_email.config import SMTPConfig
+
+    config = SMTPConfig(
+        host="smtp.example.com",
+        port=465,
+        use_tls=False,
+        use_ssl=True,
+    )
+    backend = SMTPBackend(config=config)
+
+    with patch("aiosmtplib.SMTP") as mock_smtp_class:
+        mock_smtp = AsyncMock()
+        mock_smtp.connect = AsyncMock()
+        mock_smtp.starttls = AsyncMock()
+        mock_smtp_class.return_value = mock_smtp
+
+        await backend.open()
+
+        # use_tls=True in aiosmtplib means implicit SSL
+        mock_smtp_class.assert_called_once_with(
+            hostname="smtp.example.com",
+            port=465,
+            timeout=30,
+            use_tls=True,
+            start_tls=False,
+        )
+        # No manual STARTTLS for implicit SSL
+        mock_smtp.starttls.assert_not_called()
+
+
+async def test_smtp_backend_no_tls_no_ssl() -> None:
+    """Test plain connection without TLS or SSL does not call starttls."""
+    from litestar_email.backends.smtp import SMTPBackend
+    from litestar_email.config import SMTPConfig
+
+    config = SMTPConfig(
+        host="localhost",
+        port=25,
+        use_tls=False,
+        use_ssl=False,
+    )
+    backend = SMTPBackend(config=config)
+
+    with patch("aiosmtplib.SMTP") as mock_smtp_class:
+        mock_smtp = AsyncMock()
+        mock_smtp.connect = AsyncMock()
+        mock_smtp.starttls = AsyncMock()
+        mock_smtp_class.return_value = mock_smtp
+
+        await backend.open()
+
+        mock_smtp_class.assert_called_once_with(
+            hostname="localhost",
+            port=25,
+            timeout=30,
+            use_tls=False,
+            start_tls=False,
+        )
+        mock_smtp.starttls.assert_not_called()
