@@ -6,6 +6,7 @@ import pytest
 
 pytestmark = pytest.mark.anyio
 
+
 async def test_httpx_transport_post_with_custom_headers() -> None:
     """Test HttpxTransport.post passes per-request headers."""
     from litestar_email.transports.httpx import HttpxTransport
@@ -23,18 +24,15 @@ async def test_httpx_transport_post_with_custom_headers() -> None:
 
         await transport.open()
         custom_headers = {"X-Custom-Header": "custom-value"}
-        
+
         # This should fail if we haven't updated the signature yet,
         # or if we have updated it but aren't passing it to the client.
-        await transport.post(
-            "https://api.example.com",
-            json={"key": "value"},
-            headers=custom_headers
-        )
+        await transport.post("https://api.example.com", json={"key": "value"}, headers=custom_headers)
 
         # Verify headers were passed to post call
         args, kwargs = mock_client.post.call_args
         assert kwargs.get("headers") == custom_headers
+
 
 async def test_aiohttp_transport_post_with_custom_headers() -> None:
     """Test AiohttpTransport.post passes per-request headers."""
@@ -55,11 +53,7 @@ async def test_aiohttp_transport_post_with_custom_headers() -> None:
         await transport.open()
         custom_headers = {"X-Custom-Header": "custom-value"}
 
-        await transport.post(
-            "https://api.example.com",
-            json={"key": "value"},
-            headers=custom_headers
-        )
+        await transport.post("https://api.example.com", json={"key": "value"}, headers=custom_headers)
 
         # Verify headers were passed to post call
         args, kwargs = mock_session.post.call_args

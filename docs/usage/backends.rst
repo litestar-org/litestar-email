@@ -24,12 +24,16 @@ Available Backends
 +--------------+--------------------+--------------------------------+
 | ``mailgun``  | ``MailgunConfig``  | Mailgun API (transactional)    |
 +--------------+--------------------+--------------------------------+
+| ``ses``      | ``SESConfig``      | Amazon SES API v2              |
++--------------+--------------------+--------------------------------+
 
 .. note::
 
-   API backends (Resend, SendGrid, Mailgun) use ``httpx`` which is bundled with
-   Litestar. No extra installation is needed. Optionally, you can use ``aiohttp``
-   as an alternative transport by installing ``litestar-email[aiohttp]``.
+   API backends (Resend, SendGrid, Mailgun, SES) use ``httpx`` which is bundled
+   with Litestar. No extra installation is needed for the transport. Optionally,
+   you can use ``aiohttp`` as an alternative transport by installing
+   ``litestar-email[aiohttp]``. The SES backend additionally requires
+   ``litestar-email[ses]`` for AWS Signature Version 4 signing.
 
 SMTP Backend
 ------------
@@ -239,6 +243,71 @@ MailgunConfig Options
 +--------------------+------+---------+----------------------------------------+
 | ``http_transport`` | str  | "httpx" | HTTP transport ("httpx", "aiohttp")    |
 +--------------------+------+---------+----------------------------------------+
+
+Amazon SES Backend
+------------------
+
+The SES backend sends emails via `Amazon SES API v2
+<https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_SendEmail.html>`_.
+It uses AWS Signature Version 4 (SigV4) for authentication, signing the exact
+JSON bytes that are placed on the wire so signatures cannot be invalidated by
+transport-level re-serialization.
+
+SES Installation
+^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    pip install litestar-email[ses]
+
+SES Configuration
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from litestar_email import EmailConfig, SESConfig
+
+    # Explicit IAM credentials
+    config = EmailConfig(
+        backend=SESConfig(
+            region="us-east-1",
+            aws_access_key_id="AKIA...",
+            aws_secret_access_key="...",
+        ),
+        from_email="noreply@yourdomain.com",
+    )
+
+    # Default credential chain (env vars / IAM role / shared config)
+    config = EmailConfig(
+        backend=SESConfig(region="us-east-1"),
+        from_email="noreply@yourdomain.com",
+    )
+
+.. note::
+
+   The SES backend uses the ``Simple`` content type, which does not support
+   attachments. Attempting to send an :class:`~litestar_email.message.EmailMessage`
+   with attachments raises :class:`~litestar_email.exceptions.EmailDeliveryError`.
+   For attachments, use the SMTP backend.
+
+SESConfig Options
+^^^^^^^^^^^^^^^^^
+
++-------------------------+-------------+-------------+-------------------------------------------+
+| Option                  | Type        | Default     | Description                               |
++=========================+=============+=============+===========================================+
+| ``region``              | str         | "us-east-1" | AWS region for the SES endpoint           |
++-------------------------+-------------+-------------+-------------------------------------------+
+| ``aws_access_key_id``   | str \| None | None        | Optional explicit access key              |
++-------------------------+-------------+-------------+-------------------------------------------+
+| ``aws_secret_access_key`` | str \| None | None      | Optional explicit secret key              |
++-------------------------+-------------+-------------+-------------------------------------------+
+| ``aws_session_token``   | str \| None | None        | Optional session token (STS / IAM role)   |
++-------------------------+-------------+-------------+-------------------------------------------+
+| ``timeout``             | int         | 30          | HTTP request timeout                      |
++-------------------------+-------------+-------------+-------------------------------------------+
+| ``http_transport``      | str         | "httpx"     | HTTP transport ("httpx", "aiohttp")       |
++-------------------------+-------------+-------------+-------------------------------------------+
 
 Error Handling
 --------------

@@ -588,6 +588,7 @@ def test_get_backend_sendgrid() -> None:
 
 def test_get_backend_with_config() -> None:
     """Test that config is passed to backend via factory."""
+    from litestar_email.backends.smtp import SMTPBackend
     from litestar_email.config import EmailConfig, SMTPConfig
 
     config = EmailConfig(
@@ -595,6 +596,7 @@ def test_get_backend_with_config() -> None:
     )
     backend = config.get_backend()
 
+    assert isinstance(backend, SMTPBackend)
     assert backend._config.host == "mail.example.com"
     assert backend._config.port == 587
 

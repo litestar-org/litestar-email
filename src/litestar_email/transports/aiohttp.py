@@ -251,6 +251,7 @@ class AiohttpTransport:
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+        content: bytes | None = None,
         headers: "Mapping[str, str] | None" = None,
     ) -> AiohttpResponse:
         """Make a POST request.
@@ -260,6 +261,8 @@ class AiohttpTransport:
             json: Dictionary to serialize as JSON body.
             data: Dictionary for form-data body.
             files: List of file tuples for multipart upload.
+            content: Raw bytes to use as the request body verbatim. Mutually exclusive
+                with ``json``/``data``/``files``. Required for byte-stable signed requests.
             headers: Optional headers to include in this specific request.
 
         Returns:
@@ -290,7 +293,9 @@ class AiohttpTransport:
             if headers:
                 request_kwargs["headers"] = dict(headers)
 
-            if json is not None:
+            if content is not None:
+                request_kwargs["data"] = content
+            elif json is not None:
                 request_kwargs["json"] = json
             elif data is not None or files is not None:
                 request_kwargs["data"] = self._build_form_data(data, files)

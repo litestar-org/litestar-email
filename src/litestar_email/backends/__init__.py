@@ -14,6 +14,7 @@ __all__ = (
     "InMemoryBackend",
     "MailgunBackend",
     "ResendBackend",
+    "SESBackend",
     "SMTPBackend",
     "SendGridBackend",
     "get_backend",
@@ -64,12 +65,14 @@ def _register_builtins() -> None:
     from litestar_email.backends.memory import InMemoryBackend
     from litestar_email.backends.resend import ResendBackend
     from litestar_email.backends.sendgrid import SendGridBackend
+    from litestar_email.backends.ses import SESBackend
     from litestar_email.backends.smtp import SMTPBackend
 
     _backend_registry.setdefault("console", ConsoleBackend)
     _backend_registry.setdefault("memory", InMemoryBackend)
     _backend_registry.setdefault("smtp", SMTPBackend)
     _backend_registry.setdefault("resend", ResendBackend)
+    _backend_registry.setdefault("ses", SESBackend)
     _backend_registry.setdefault("sendgrid", SendGridBackend)
     _backend_registry.setdefault("mailgun", MailgunBackend)
 
@@ -124,11 +127,12 @@ def _get_backend_name_for_config(backend_config: "BackendConfig") -> str:
     Raises:
         ValueError: If the config type is not recognized.
     """
-    from litestar_email.config import MailgunConfig, ResendConfig, SendGridConfig, SMTPConfig
+    from litestar_email.config import MailgunConfig, ResendConfig, SendGridConfig, SESConfig, SMTPConfig
 
     config_to_backend: dict[type, str] = {
         SMTPConfig: "smtp",
         ResendConfig: "resend",
+        SESConfig: "ses",
         SendGridConfig: "sendgrid",
         MailgunConfig: "mailgun",
     }
@@ -238,4 +242,5 @@ from litestar_email.backends.mailgun import MailgunBackend
 from litestar_email.backends.memory import InMemoryBackend
 from litestar_email.backends.resend import ResendBackend
 from litestar_email.backends.sendgrid import SendGridBackend
+from litestar_email.backends.ses import SESBackend
 from litestar_email.backends.smtp import SMTPBackend
