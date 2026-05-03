@@ -5,11 +5,12 @@ from litestar_email.backends import (
     MailgunBackend,
     ResendBackend,
     SendGridBackend,
+    SESBackend,
     SMTPBackend,
+    email_backend,
     get_backend,
     get_backend_class,
     list_backends,
-    register_backend,
 )
 from litestar_email.config import (
     AsyncServiceProvider,
@@ -18,6 +19,7 @@ from litestar_email.config import (
     MailgunConfig,
     ResendConfig,
     SendGridConfig,
+    SESConfig,
     SMTPConfig,
 )
 from litestar_email.exceptions import (
@@ -55,12 +57,14 @@ __all__ = (
     "MissingDependencyError",
     "ResendBackend",
     "ResendConfig",
+    "SESBackend",
+    "SESConfig",
     "SMTPBackend",
     "SMTPConfig",
     "SendGridBackend",
     "SendGridConfig",
+    "email_backend",
     "get_backend",
     "get_backend_class",
     "list_backends",
-    "register_backend",
 )

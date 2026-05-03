@@ -11,6 +11,7 @@ from litestar_email.utils.dependencies import module_available
 __all__ = (
     "ensure_aiohttp",
     "ensure_aiosmtplib",
+    "ensure_botocore",
     "ensure_httpx",
 )
 
@@ -86,3 +87,21 @@ def ensure_aiosmtplib() -> None:
             # use aiosmtplib
     """
     _require_dependency("aiosmtplib", install_package="smtp")
+
+
+def ensure_botocore() -> None:
+    """Ensure botocore is available for Amazon SES backend.
+
+    Note:
+        May raise ``MissingDependencyError`` if botocore is not installed.
+
+    Example:
+        Check before using SES backend::
+
+            from litestar_email.utils.module_loader import ensure_botocore
+
+            ensure_botocore()
+            import botocore
+            # use botocore
+    """
+    _require_dependency("botocore", install_package="ses")

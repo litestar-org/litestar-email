@@ -141,19 +141,29 @@ class HTTPTransport(Protocol):
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+        content: bytes | None = None,
+        headers: "Mapping[str, str] | None" = None,
     ) -> HTTPResponse:
         """Make a POST request.
 
-        Supports both JSON and form-data request bodies:
-        - Use ``json`` parameter for JSON APIs (Resend, SendGrid)
-        - Use ``data`` and ``files`` parameters for form-data APIs (Mailgun)
+        Supports JSON, form-data, and pre-serialized bytes request bodies:
+
+        - Use ``json`` for JSON APIs that don't require body-byte stability (Resend, SendGrid).
+        - Use ``data`` and ``files`` for form-data APIs (Mailgun).
+        - Use ``content`` for pre-serialized bytes that must hit the wire unchanged
+          (Amazon SES with SigV4, where the request body must byte-for-byte match
+          what was signed).
 
         Args:
             url: The URL to POST to. May be relative if base_url was set.
-            json: Dictionary to serialize as JSON body. Mutually exclusive with data.
+            json: Dictionary to serialize as JSON body. Mutually exclusive with data and content.
             data: Dictionary for form-data body. Used with files for multipart requests.
             files: List of file tuples for multipart upload.
                 Each tuple is (field_name, (filename, content, content_type)).
+            content: Raw bytes to use as the request body verbatim. The caller is
+                responsible for setting an appropriate ``Content-Type`` header.
+            headers: Optional headers to include in this specific request.
+                These will be merged with or override the default transport headers.
 
         Returns:
             Response object conforming to HTTPResponse protocol.

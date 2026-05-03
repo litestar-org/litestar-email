@@ -15,15 +15,16 @@ For production backends, install with the appropriate extra:
 # SMTP backend
 pip install litestar-email[smtp]
 
+# Amazon SES backend (adds botocore for SigV4 signing)
+pip install litestar-email[ses]
+
 # aiohttp transport (alternative to httpx for API backends)
 pip install litestar-email[aiohttp]
-
-# All optional dependencies
-pip install litestar-email[all]
 ```
 
-> **Note**: API backends (Resend, SendGrid, Mailgun) use `httpx` which is bundled with Litestar.
-> No extra installation is needed for these backends.
+> **Note**: API backends (Resend, SendGrid, Mailgun, SES) use `httpx` which is bundled with Litestar.
+> No extra HTTP transport installation is needed. SES additionally requires the `[ses]` extra
+> for AWS Signature Version 4 signing.
 
 ## Usage
 
@@ -186,8 +187,9 @@ message = EmailMultiAlternatives(
 | `resend` | `ResendConfig` | Resend HTTP API |
 | `sendgrid` | `SendGridConfig` | SendGrid HTTP API |
 | `mailgun` | `MailgunConfig` | Mailgun HTTP API |
+| `ses` | `SESConfig` | Amazon SES API v2 (SigV4-signed) |
 
-API backends (Resend, SendGrid, Mailgun) support configurable HTTP transports:
+API backends (Resend, SendGrid, Mailgun, SES) support configurable HTTP transports:
 
 ```python
 from litestar_email import ResendConfig

@@ -54,7 +54,7 @@ The backends are available via ``litestar_email.backends``. Use
 
 .. autofunction:: litestar_email.backends.get_backend_class
 
-.. autofunction:: litestar_email.backends.register_backend
+.. autofunction:: litestar_email.backends.email_backend
 
 .. autofunction:: litestar_email.backends.list_backends
 
