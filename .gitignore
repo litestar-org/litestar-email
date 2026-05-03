@@ -43,3 +43,6 @@ specs/archive
 *.db
 .beads-credential-key
 .gemini
+.claude
+.codex
+.agents
