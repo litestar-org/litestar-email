@@ -46,3 +46,5 @@ specs/archive
 .claude
 .codex
 .agents
+CLAUDE.md
+GEMINI.md
