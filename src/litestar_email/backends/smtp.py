@@ -116,6 +116,7 @@ class SMTPBackend(BaseEmailBackend):
             port=self._config.port,
             timeout=self._config.timeout,
             use_tls=self._config.use_ssl,  # use_tls in aiosmtplib means implicit SSL
+            start_tls=False,  # Disable auto-STARTTLS
         )
 
         try:
