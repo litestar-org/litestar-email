@@ -15,6 +15,7 @@ __all__ = (
     "EmailConfig",
     "MailgunConfig",
     "ResendConfig",
+    "SESConfig",
     "SMTPConfig",
     "SendGridConfig",
 )
@@ -205,7 +206,39 @@ class MailgunConfig:
     http_transport: "str | type[HTTPTransport]" = "httpx"
 
 
-BackendConfig = SMTPConfig | ResendConfig | SendGridConfig | MailgunConfig
+@dataclass(slots=True)
+class SESConfig:
+    """Configuration for Amazon SES API email backend.
+
+    This configuration class defines the settings for the Amazon SES API
+    email service (https://aws.amazon.com/ses/).
+
+    Example:
+        Configure with explicit credentials::
+
+            config = SESConfig(
+                region="us-east-1",
+                aws_access_key_id="AKIA...",
+                aws_secret_access_key="secret...",
+            )
+
+        Use aiohttp transport::
+
+            config = SESConfig(
+                region="us-east-1",
+                http_transport="aiohttp",
+            )
+    """
+
+    region: str = "us-east-1"
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+    aws_session_token: str | None = None
+    timeout: int = 30
+    http_transport: "str | type[HTTPTransport]" = "httpx"
+
+
+BackendConfig = SMTPConfig | ResendConfig | SendGridConfig | MailgunConfig | SESConfig
 """Type alias for all backend configuration types."""
 
 
@@ -270,6 +303,7 @@ class EmailConfig:
             "EmailService": EmailService,
             "MailgunConfig": MailgunConfig,
             "ResendConfig": ResendConfig,
+            "SESConfig": SESConfig,
             "SMTPConfig": SMTPConfig,
             "SendGridConfig": SendGridConfig,
         }
