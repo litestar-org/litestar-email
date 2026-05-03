@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from typing_extensions import Self
+
 from litestar_email.backends import BaseEmailBackend
 
 if TYPE_CHECKING:
@@ -76,7 +78,7 @@ class EmailService:
         """
         return await self.send_messages([message])
 
-    async def __aenter__(self) -> "EmailService":
+    async def __aenter__(self) -> Self:
         if self._backend is None:
             self._backend = self._config.get_backend()
             await self._backend.open()

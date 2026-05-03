@@ -12,6 +12,8 @@ import subprocess
 import time
 from enum import Enum
 
+from typing_extensions import Self
+
 __all__ = (
     "MailpitContainer",
     "NoRuntimeAvailableError",
@@ -378,7 +380,7 @@ class MailpitContainer:
         except Exception:
             return []
 
-    def __enter__(self) -> "MailpitContainer":
+    def __enter__(self) -> Self:
         """Enter context manager - start the container.
 
         Returns:

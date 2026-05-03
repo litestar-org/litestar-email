@@ -19,16 +19,16 @@ For production use with SMTP:
     # SMTP backend (requires aiosmtplib)
     pip install litestar-email[smtp]
 
+    # Amazon SES backend (requires botocore for SigV4 signing)
+    pip install litestar-email[ses]
+
     # Alternative HTTP transport (for API backends)
     pip install litestar-email[aiohttp]
 
-    # All optional dependencies
-    pip install litestar-email[all]
-
 .. note::
 
-   API backends (Resend, SendGrid, Mailgun) use ``httpx`` which is bundled with
-   Litestar. No extra installation is needed for these backends.
+   API backends (Resend, SendGrid, Mailgun, SES) use ``httpx`` which is bundled
+   with Litestar. No extra HTTP transport installation is needed.
 
 Basic Setup
 -----------

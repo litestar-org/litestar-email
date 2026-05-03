@@ -376,10 +376,10 @@ You can implement your own backend by subclassing ``BaseEmailBackend`` and regis
 
 .. code-block:: python
 
-    from litestar_email.backends import BaseEmailBackend, register_backend
+    from litestar_email.backends import BaseEmailBackend, email_backend
     from litestar_email.exceptions import EmailDeliveryError
 
-    @register_backend("mybackend")
+    @email_backend("mybackend")
     class MyBackend(BaseEmailBackend):
         __slots__ = ("_client",)
 

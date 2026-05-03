@@ -20,9 +20,6 @@ pip install litestar-email[ses]
 
 # aiohttp transport (alternative to httpx for API backends)
 pip install litestar-email[aiohttp]
-
-# All optional dependencies
-pip install litestar-email[all]
 ```
 
 > **Note**: API backends (Resend, SendGrid, Mailgun, SES) use `httpx` which is bundled with Litestar.
