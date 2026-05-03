@@ -187,6 +187,7 @@ class HttpxTransport:
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+        headers: "Mapping[str, str] | None" = None,
     ) -> HttpxResponse:
         """Make a POST request.
 
@@ -195,6 +196,7 @@ class HttpxTransport:
             json: Dictionary to serialize as JSON body.
             data: Dictionary for form-data body.
             files: List of file tuples for multipart upload.
+            headers: Optional headers to include in this specific request.
 
         Returns:
             Response wrapped in HttpxResponse.
@@ -210,7 +212,7 @@ class HttpxTransport:
         import httpx
 
         try:
-            response = await self._client.post(url, json=json, data=data, files=files)
+            response = await self._client.post(url, json=json, data=data, files=files, headers=dict(headers) if headers else None)
             return HttpxResponse(response)
         except httpx.ConnectError as exc:
             msg = f"Connection failed: {exc}"

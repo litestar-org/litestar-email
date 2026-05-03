@@ -141,6 +141,7 @@ class HTTPTransport(Protocol):
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+        headers: "Mapping[str, str] | None" = None,
     ) -> HTTPResponse:
         """Make a POST request.
 
@@ -154,6 +155,8 @@ class HTTPTransport(Protocol):
             data: Dictionary for form-data body. Used with files for multipart requests.
             files: List of file tuples for multipart upload.
                 Each tuple is (field_name, (filename, content, content_type)).
+            headers: Optional headers to include in this specific request.
+                These will be merged with or override the default transport headers.
 
         Returns:
             Response object conforming to HTTPResponse protocol.

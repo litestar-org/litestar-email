@@ -251,6 +251,7 @@ class AiohttpTransport:
         json: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
         files: list[tuple[str, tuple[str, bytes, str]]] | None = None,
+        headers: "Mapping[str, str] | None" = None,
     ) -> AiohttpResponse:
         """Make a POST request.
 
@@ -259,6 +260,7 @@ class AiohttpTransport:
             json: Dictionary to serialize as JSON body.
             data: Dictionary for form-data body.
             files: List of file tuples for multipart upload.
+            headers: Optional headers to include in this specific request.
 
         Returns:
             Response wrapped in AiohttpResponse with lazy body reading.
@@ -284,6 +286,9 @@ class AiohttpTransport:
 
             if self._auth:
                 request_kwargs["auth"] = self._auth
+
+            if headers:
+                request_kwargs["headers"] = dict(headers)
 
             if json is not None:
                 request_kwargs["json"] = json
