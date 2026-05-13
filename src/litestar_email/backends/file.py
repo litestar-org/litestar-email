@@ -45,6 +45,12 @@ def _slugify(subject: str) -> str:
     return slug[:_SLUG_MAX_LENGTH].rstrip("-") or _SLUG_FALLBACK
 
 
+def _write_bytes_exclusive(target: Path, payload: bytes) -> None:
+    """Write bytes to ``target`` without overwriting an existing file."""
+    with target.open("xb") as file:
+        file.write(payload)
+
+
 class FileBackend(BaseEmailBackend):
     """Email backend that writes each message to a file on disk.
 
@@ -150,17 +156,22 @@ class FileBackend(BaseEmailBackend):
         Args:
             message: The email message to write.
         """
-        filename = self._build_filename(message)
-        target = Path(self._config.path) / filename
-
         if self._config.format == "eml":
-            payload_bytes = self._build_eml_bytes(message)
-            await asyncio.to_thread(target.write_bytes, payload_bytes)
-            return
+            payload = self._build_eml_bytes(message)
+        else:
+            buffer = StringIO()
+            render_text_message(message, resolve_from=self._resolve_from, stream=buffer)
+            payload = buffer.getvalue().encode("utf-8")
 
-        buffer = StringIO()
-        render_text_message(message, resolve_from=self._resolve_from, stream=buffer)
-        await asyncio.to_thread(target.write_text, buffer.getvalue(), "utf-8")
+        while True:
+            filename = self._build_filename(message)
+            target = Path(self._config.path) / filename
+            try:
+                await asyncio.to_thread(_write_bytes_exclusive, target, payload)
+            except FileExistsError:
+                continue
+            else:
+                return
 
     def _build_filename(self, message: "EmailMessage") -> str:
         """Build the filename for a message.

@@ -2,6 +2,7 @@
 
 import email
 import re
+from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
 
@@ -155,6 +156,37 @@ async def test_file_backend_counter_increments(tmp_path: Path) -> None:
     counters = [path.name.split("-")[2] for path in files]
     assert counters[0] == "000000"
     assert counters[1] == "000001"
+
+
+async def test_file_backend_does_not_overwrite_when_service_recreates_backend(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test that colliding filenames are retried instead of overwritten."""
+    import litestar_email.backends.file as file_backend
+    from litestar_email import EmailConfig, EmailMessage, FileConfig
+
+    class FrozenDateTime:
+        @classmethod
+        def now(cls, tz: timezone | None = None) -> datetime:
+            return datetime(2026, 1, 1, 12, 0, 0, tzinfo=tz)
+
+    monkeypatch.setattr(file_backend, "datetime", FrozenDateTime)
+
+    config = EmailConfig(backend=FileConfig(path=tmp_path), from_email="noreply@example.com")
+    service = config.get_service()
+
+    await service.send_message(EmailMessage(subject="Same", body="first", to=["u@example.com"]))
+    await service.send_message(EmailMessage(subject="Same", body="second", to=["u@example.com"]))
+
+    files = sorted(tmp_path.iterdir())  # noqa: ASYNC240
+
+    assert [path.name for path in files] == [
+        "20260101-120000-000000-same.eml",
+        "20260101-120000-000001-same.eml",
+    ]
+    assert b"first" in files[0].read_bytes()
+    assert b"second" in files[1].read_bytes()
 
 
 async def test_file_backend_fail_silently(tmp_path: Path) -> None:
