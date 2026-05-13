@@ -9,23 +9,25 @@ advanced/testing concern.
 Available Backends
 ------------------
 
-+--------------+--------------------+--------------------------------+
-| Backend      | Config Class       | Use Case                       |
-+==============+====================+================================+
-| ``console``  | None               | Development (prints to stdout) |
-+--------------+--------------------+--------------------------------+
-| ``memory``   | None               | Testing (stores in memory)     |
-+--------------+--------------------+--------------------------------+
-| ``smtp``     | ``SMTPConfig``     | Production SMTP servers        |
-+--------------+--------------------+--------------------------------+
-| ``resend``   | ``ResendConfig``   | Resend API (modern hosting)    |
-+--------------+--------------------+--------------------------------+
-| ``sendgrid`` | ``SendGridConfig`` | SendGrid API (enterprise)      |
-+--------------+--------------------+--------------------------------+
-| ``mailgun``  | ``MailgunConfig``  | Mailgun API (transactional)    |
-+--------------+--------------------+--------------------------------+
-| ``ses``      | ``SESConfig``      | Amazon SES API v2              |
-+--------------+--------------------+--------------------------------+
++--------------+--------------------+----------------------------------+
+| Backend      | Config Class       | Use Case                         |
++==============+====================+==================================+
+| ``console``  | None               | Development (prints to stdout)   |
++--------------+--------------------+----------------------------------+
+| ``memory``   | None               | Testing (stores in memory)       |
++--------------+--------------------+----------------------------------+
+| ``file``     | ``FileConfig``     | Development (writes files)       |
++--------------+--------------------+----------------------------------+
+| ``smtp``     | ``SMTPConfig``     | Production SMTP servers          |
++--------------+--------------------+----------------------------------+
+| ``resend``   | ``ResendConfig``   | Resend API (modern hosting)      |
++--------------+--------------------+----------------------------------+
+| ``sendgrid`` | ``SendGridConfig`` | SendGrid API (enterprise)        |
++--------------+--------------------+----------------------------------+
+| ``mailgun``  | ``MailgunConfig``  | Mailgun API (transactional)      |
++--------------+--------------------+----------------------------------+
+| ``ses``      | ``SESConfig``      | Amazon SES API v2                |
++--------------+--------------------+----------------------------------+
 
 .. note::
 
@@ -105,6 +107,58 @@ SMTPConfig Options
 +--------------+----------+---------+-----------------------------------+
 | ``timeout``  | int      | 30      | Connection timeout in seconds     |
 +--------------+----------+---------+-----------------------------------+
+
+File Backend
+------------
+
+The file backend writes each outgoing message to its own file in a target
+directory. Intended for local development - same niche as the console
+backend, but persistent and inspectable. Defaults to ``.eml`` output so
+files open directly in Apple Mail, Thunderbird, or the built-in VS Code
+preview; switch to ``format="text"`` for a console-style plain-text dump.
+
+File Configuration
+^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from litestar_email import EmailConfig, FileConfig
+
+    # RFC 822 .eml files (default) — open in any mail client
+    config = EmailConfig(
+        backend=FileConfig(path="./tmp/emails"),
+        from_email="noreply@example.com",
+    )
+
+    # Plain-text dump — identical to the console backend output
+    config = EmailConfig(
+        backend=FileConfig(path="./tmp/emails", format="text"),
+        from_email="noreply@example.com",
+    )
+
+The target directory is auto-created with ``parents=True`` on first send.
+Each message produces one file named
+``YYYYMMDD-HHMMSS-NNNNNN-<slug>.{eml,txt}`` where ``<slug>`` is derived from
+the subject (lowercased, non-alphanumeric runs replaced with ``-``,
+truncated to 50 characters; falls back to ``no-subject``).
+
+FileConfig Options
+^^^^^^^^^^^^^^^^^^
+
++------------+-------------------------------+-------------+-----------------------------------+
+| Option     | Type                          | Default     | Description                       |
++============+===============================+=============+===================================+
+| ``path``   | ``str | Path``                | ``"./emails"`` | Directory to write files to    |
++------------+-------------------------------+-------------+-----------------------------------+
+| ``format`` | ``Literal["eml", "text"]``    | ``"eml"``   | Output format                     |
++------------+-------------------------------+-------------+-----------------------------------+
+
+.. note::
+
+   The per-backend counter that disambiguates filenames within the same
+   second is in-process. If multiple workers write to the same directory
+   they may share a clock second; use distinct paths per worker to avoid
+   the slim collision risk on identical subjects.
 
 Resend Backend
 --------------
