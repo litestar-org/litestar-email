@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from litestar.datastructures import State
@@ -13,6 +14,7 @@ __all__ = (
     "AsyncServiceProvider",
     "BackendConfig",
     "EmailConfig",
+    "FileConfig",
     "MailgunConfig",
     "ResendConfig",
     "SESConfig",
@@ -238,7 +240,34 @@ class SESConfig:
     http_transport: "str | type[HTTPTransport]" = "httpx"
 
 
-BackendConfig = SMTPConfig | ResendConfig | SendGridConfig | MailgunConfig | SESConfig
+@dataclass(slots=True)
+class FileConfig:
+    """Configuration for the file email backend.
+
+    Writes each outgoing email to a file in ``path``. Useful for local
+    development and inspection — emails persist and can be opened in a
+    mail client (``.eml`` format) or a text editor (``.txt`` format).
+
+    Example:
+        Default .eml format::
+
+            config = EmailConfig(
+                backend=FileConfig(path="./tmp/emails"),
+                from_email="noreply@example.com",
+            )
+
+        Plain-text dump::
+
+            config = EmailConfig(
+                backend=FileConfig(path="./tmp/emails", format="text"),
+            )
+    """
+
+    path: str | Path = "./emails"
+    format: Literal["eml", "text"] = "eml"
+
+
+BackendConfig = SMTPConfig | ResendConfig | SendGridConfig | MailgunConfig | SESConfig | FileConfig
 """Type alias for all backend configuration types."""
 
 
@@ -301,6 +330,7 @@ class EmailConfig:
             "EmailMessage": EmailMessage,
             "EmailMultiAlternatives": EmailMultiAlternatives,
             "EmailService": EmailService,
+            "FileConfig": FileConfig,
             "MailgunConfig": MailgunConfig,
             "ResendConfig": ResendConfig,
             "SESConfig": SESConfig,

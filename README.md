@@ -183,6 +183,7 @@ message = EmailMultiAlternatives(
 |---------|--------------|----------|
 | `console` | - | Development (prints to stdout) |
 | `memory` | - | Testing (stores in memory) |
+| `file` | `FileConfig` | Development (writes `.eml` / `.txt` to disk) |
 | `smtp` | `SMTPConfig` | Production SMTP servers |
 | `resend` | `ResendConfig` | Resend HTTP API |
 | `sendgrid` | `SendGridConfig` | SendGrid HTTP API |
