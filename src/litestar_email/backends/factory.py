@@ -59,6 +59,7 @@ def _register_builtins() -> None:
     if the required packages are not available.
     """
     from litestar_email.backends.console import ConsoleBackend
+    from litestar_email.backends.file import FileBackend
     from litestar_email.backends.mailgun import MailgunBackend
     from litestar_email.backends.memory import InMemoryBackend
     from litestar_email.backends.resend import ResendBackend
@@ -68,6 +69,7 @@ def _register_builtins() -> None:
 
     _backend_registry.setdefault("console", ConsoleBackend)
     _backend_registry.setdefault("memory", InMemoryBackend)
+    _backend_registry.setdefault("file", FileBackend)
     _backend_registry.setdefault("smtp", SMTPBackend)
     _backend_registry.setdefault("resend", ResendBackend)
     _backend_registry.setdefault("ses", SESBackend)
@@ -123,7 +125,7 @@ def _get_backend_name_for_config(backend_config: "BackendConfig") -> str:
     Raises:
         ValueError: If the config type is not recognized.
     """
-    from litestar_email.config import MailgunConfig, ResendConfig, SendGridConfig, SESConfig, SMTPConfig
+    from litestar_email.config import FileConfig, MailgunConfig, ResendConfig, SendGridConfig, SESConfig, SMTPConfig
 
     config_to_backend: dict[type, str] = {
         SMTPConfig: "smtp",
@@ -131,6 +133,7 @@ def _get_backend_name_for_config(backend_config: "BackendConfig") -> str:
         SESConfig: "ses",
         SendGridConfig: "sendgrid",
         MailgunConfig: "mailgun",
+        FileConfig: "file",
     }
 
     for config_type, backend_name in config_to_backend.items():

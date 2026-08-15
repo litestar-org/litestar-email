@@ -1,4 +1,5 @@
 from io import StringIO
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +13,7 @@ def test_list_backends() -> None:
     backends = list_backends()
     assert "console" in backends
     assert "memory" in backends
+    assert "file" in backends
 
 
 def test_get_backend_class_by_name() -> None:
@@ -85,6 +87,24 @@ def test_config_get_backend_returns_backend() -> None:
     backend = config.get_backend()
 
     assert isinstance(backend, InMemoryBackend)
+
+
+def test_file_config_round_trip_through_factory(tmp_path: Path) -> None:
+    """Test EmailConfig with FileConfig returns a configured FileBackend."""
+    from litestar_email.backends import FileBackend
+    from litestar_email.config import EmailConfig, FileConfig
+
+    config = EmailConfig(
+        backend=FileConfig(path=tmp_path),
+        from_email="noreply@example.com",
+        from_name="Litestar",
+    )
+    backend = config.get_backend()
+
+    assert isinstance(backend, FileBackend)
+    assert backend._config.path == tmp_path
+    assert backend._default_from_email == "noreply@example.com"
+    assert backend._default_from_name == "Litestar"
 
 
 async def test_console_backend_sends_to_stream() -> None:
