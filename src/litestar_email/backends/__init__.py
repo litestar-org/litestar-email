@@ -11,6 +11,7 @@ from litestar_email.backends.factory import (
     get_backend_class,
     list_backends,
 )
+from litestar_email.backends.file import FileBackend
 from litestar_email.backends.mailgun import MailgunBackend
 from litestar_email.backends.memory import InMemoryBackend
 from litestar_email.backends.resend import ResendBackend
@@ -21,6 +22,7 @@ from litestar_email.backends.smtp import SMTPBackend
 __all__ = (
     "BaseEmailBackend",
     "ConsoleBackend",
+    "FileBackend",
     "InMemoryBackend",
     "MailgunBackend",
     "ResendBackend",

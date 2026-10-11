@@ -73,6 +73,11 @@ The backends are available via ``litestar_email.backends``. Use
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: litestar_email.backends.file
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: litestar_email.backends.smtp
    :members:
    :undoc-members:

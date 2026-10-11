@@ -4,9 +4,61 @@ from typing import TYPE_CHECKING, TextIO
 from litestar_email.backends.base import BaseEmailBackend
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from litestar_email.message import EmailMessage
 
-__all__ = ("ConsoleBackend",)
+__all__ = ("ConsoleBackend", "render_text_message")
+
+
+def render_text_message(
+    message: "EmailMessage",
+    *,
+    resolve_from: "Callable[[EmailMessage], tuple[str, str, str]]",
+    stream: TextIO,
+) -> None:
+    """Write a console-style plain-text rendering of a message to ``stream``.
+
+    Shared by :class:`ConsoleBackend` and the file backend's ``format="text"``
+    output so the two stay identical for the same message.
+
+    Args:
+        message: The email message to render.
+        resolve_from: Callable returning ``(email, name, formatted)`` for the
+            message's sender, typically ``backend._resolve_from``.
+        stream: A text stream to write to.
+    """
+    separator = "-" * 60
+    stream.write(f"{separator}\n")
+    stream.write(f"Subject: {message.subject}\n")
+    _, _, from_formatted = resolve_from(message)
+    stream.write(f"From: {from_formatted}\n")
+    stream.write(f"To: {', '.join(message.to)}\n")
+
+    if message.cc:
+        stream.write(f"Cc: {', '.join(message.cc)}\n")
+
+    if message.bcc:
+        stream.write(f"Bcc: {', '.join(message.bcc)}\n")
+
+    if message.reply_to:
+        stream.write(f"Reply-To: {', '.join(message.reply_to)}\n")
+
+    if message.headers:
+        stream.writelines(f"{key}: {value}\n" for key, value in message.headers.items())
+
+    stream.write(f"\n{message.body}\n")
+
+    for content, mimetype in message.alternatives:
+        stream.write(f"\n--- Alternative ({mimetype}) ---\n")
+        stream.write(f"{content}\n")
+
+    if message.attachments:
+        stream.write("\nAttachments:\n")
+        for filename, _, mimetype in message.attachments:
+            stream.write(f"  - {filename} ({mimetype})\n")
+
+    stream.write(f"{separator}\n\n")
 
 
 class ConsoleBackend(BaseEmailBackend):
@@ -68,36 +120,5 @@ class ConsoleBackend(BaseEmailBackend):
         Args:
             message: The email message to write.
         """
-        separator = "-" * 60
-        self.stream.write(f"{separator}\n")
-        self.stream.write(f"Subject: {message.subject}\n")
-        _, _, from_formatted = self._resolve_from(message)
-        self.stream.write(f"From: {from_formatted}\n")
-        self.stream.write(f"To: {', '.join(message.to)}\n")
-
-        if message.cc:
-            self.stream.write(f"Cc: {', '.join(message.cc)}\n")
-
-        if message.bcc:
-            self.stream.write(f"Bcc: {', '.join(message.bcc)}\n")
-
-        if message.reply_to:
-            self.stream.write(f"Reply-To: {', '.join(message.reply_to)}\n")
-
-        if message.headers:
-            for key, value in message.headers.items():
-                self.stream.write(f"{key}: {value}\n")
-
-        self.stream.write(f"\n{message.body}\n")
-
-        for content, mimetype in message.alternatives:
-            self.stream.write(f"\n--- Alternative ({mimetype}) ---\n")
-            self.stream.write(f"{content}\n")
-
-        if message.attachments:
-            self.stream.write("\nAttachments:\n")
-            for filename, _, mimetype in message.attachments:
-                self.stream.write(f"  - {filename} ({mimetype})\n")
-
-        self.stream.write(f"{separator}\n\n")
+        render_text_message(message, resolve_from=self._resolve_from, stream=self.stream)
         self.stream.flush()
