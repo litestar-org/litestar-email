@@ -86,3 +86,18 @@ def test_plugin_injects_email_service_into_handler() -> None:
 
     assert response.status_code == 200
     assert response.text == "EmailService"
+
+
+async def test_dependency_provider_yields_service_and_closes_backend() -> None:
+    """Test that the DI provider yields an open EmailService and closes it afterwards."""
+    from litestar_email import EmailConfig, EmailService
+
+    config = EmailConfig()
+    provider = config._provide_service_dependency()
+    mailer = await anext(provider)
+    assert isinstance(mailer, EmailService)
+    assert mailer._backend is not None
+
+    with pytest.raises(StopAsyncIteration):
+        await anext(provider)
+    assert mailer._backend is None
