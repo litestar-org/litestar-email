@@ -67,3 +67,22 @@ def test_plugin_registers_dependencies_and_state() -> None:
     assert app_config.state[config.email_service_state_key] is config
     assert "EmailService" in app_config.signature_namespace
     assert isinstance(plugin.get_service(app_config.state), EmailService)
+
+
+def test_plugin_injects_email_service_into_handler() -> None:
+    """Test that a handler receives an EmailService (not the context-manager provider)."""
+    from litestar import Litestar, get
+    from litestar.testing import TestClient
+
+    from litestar_email import EmailConfig, EmailPlugin, EmailService
+
+    @get("/")
+    async def handler(mailer: EmailService) -> str:
+        return type(mailer).__name__
+
+    app = Litestar(route_handlers=[handler], plugins=[EmailPlugin(config=EmailConfig())])
+    with TestClient(app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.text == "EmailService"

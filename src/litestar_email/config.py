@@ -317,7 +317,12 @@ class EmailConfig:
         """
         from litestar.di import Provide
 
-        return {self.email_service_dependency_key: Provide(self.provide_service, sync_to_thread=False)}
+        return {self.email_service_dependency_key: Provide(self._provide_service_dependency)}
+
+    async def _provide_service_dependency(self) -> AsyncIterator["EmailService"]:
+        """Yield an EmailService with a managed connection for Litestar's DI."""
+        async with self.provide_service() as mailer:
+            yield mailer
 
     def get_service(self, state: "State | None" = None) -> "EmailService":
         """Return an EmailService for this configuration.
